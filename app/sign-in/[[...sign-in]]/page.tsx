@@ -3,7 +3,7 @@ import AuthBanner from "@/components/auth-banner";
 
 export default function Page() {
     return (
-        <div className="flex min-h-screen bg-background">
+        <div className="flex h-[calc(100vh-84px)] bg-background">
             <AuthBanner/>
             <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8">
                 <div className="w-full max-w-md space-y-8">

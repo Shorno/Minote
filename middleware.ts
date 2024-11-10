@@ -6,6 +6,8 @@ export default clerkMiddleware(async (auth, request) => {
     if (!isPublicRoute(request)) {
         await auth.protect()
     }
+
+    const {} = auth
 })
 
 export const config = {
