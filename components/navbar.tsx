@@ -3,10 +3,10 @@ import {Notebook} from "lucide-react";
 import Link from "next/link";
 import {Button} from "@/components/ui/button";
 import {UserButton, useUser} from "@clerk/nextjs";
-import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
+import {Avatar, AvatarFallback} from "@/components/ui/avatar";
 
 export default function Navbar() {
-    const {isLoaded, isSignedIn, user} = useUser()
+    const {isLoaded, isSignedIn} = useUser()
 
     return (
         <nav className="flex items-center justify-between p-4 md:p-6">
