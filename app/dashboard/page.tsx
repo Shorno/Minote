@@ -31,6 +31,7 @@ export default function Dashboard() {
     const [newCategory, setNewCategory] = useState('')
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
     const {toast} = useToast()
+    //fix env
 
     useEffect(() => {
         if (user) {
