@@ -15,8 +15,6 @@ export default function Navbar() {
                 <span className="text-xl font-semibold">Minote</span>
             </Link>
             <div className="hidden md:flex space-x-4">
-                <Link href={"#features"} className="hover:text-gray-600">Features</Link>
-                <Link href={"#pricing"} className="hover:text-gray-600">Pricing</Link>
                 <Link href={"/dashboard"} className="hover:text-gray-600">Dashboard</Link>
             </div>
 

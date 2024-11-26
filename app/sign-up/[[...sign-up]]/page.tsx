@@ -1,5 +1,5 @@
 import {SignUp} from '@clerk/nextjs'
-import AuthBanner from "@/components/auth-banner";
+import AuthBanner from "@/components/auth/auth-banner";
 
 export default function Page() {
     return (
