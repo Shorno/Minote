@@ -1,54 +1,118 @@
-"use client"
+'use client'
 
-import {useState} from 'react'
+import {useState, useEffect} from 'react'
+import {useUser} from '@clerk/nextjs'
 import {Plus} from 'lucide-react'
 import {Button} from "@/components/ui/button"
-import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog"
+import {Input} from "@/components/ui/input"
+import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog"
+import {Textarea} from "@/components/ui/textarea"
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select"
 import {useToast} from "@/hooks/use-toast";
+import {createNote, deleteNote, getNotes, updateNote} from "@/actions/notesAction";
 import CategoryFilter from "@/components/notes/category-filter";
 import NoteCard from "@/components/notes/note-card";
-import NoteModalForm from "@/components/notes/note-modal-form";
+
 
 interface Note {
-    id: number
+    id: string
     title: string
     content: string
-    category: string
+    category: {
+        name: string
+    }
 }
 
 export default function Dashboard() {
+    const {user} = useUser()
     const [notes, setNotes] = useState<Note[]>([])
     const [newNote, setNewNote] = useState({title: '', content: '', category: ''})
-    const [categories, setCategories] = useState(['Work', 'Personal', 'Ideas', 'To-Do'])
+    const [categories, setCategories] = useState<string[]>([])
     const [newCategory, setNewCategory] = useState('')
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
     const {toast} = useToast()
 
-    const addNote = () => {
-        if (newNote.title && newNote.content && newNote.category) {
-            setNotes([...notes, {id: Date.now(), ...newNote}])
+    useEffect(() => {
+        if (user) {
+            fetchNotes()
+        }
+    }, [user])
+
+    const fetchNotes = async () => {
+        const result = await getNotes()
+        if (result.success) {
+            setNotes(result.notes)
+            const uniqueCategories = [...new Set(result.notes.map(note => note.category.name))]
+            setCategories(uniqueCategories)
+        } else {
+            toast({
+                title: "Error",
+                description: result.error,
+                variant: "destructive",
+            })
+        }
+    }
+
+    const addNote = async (formData: FormData) => {
+        if (!user) {
+            toast({
+                title: "Error",
+                description: "You must be logged in to create a note.",
+                variant: "destructive",
+            })
+            return
+        }
+
+        const result = await createNote(formData)
+
+        if (result.success) {
+            await fetchNotes()
             setNewNote({title: '', content: '', category: ''})
             toast({
                 title: "Note created",
                 description: "Your note has been successfully created.",
             })
+        } else {
+            toast({
+                title: "Error",
+                description: result.error,
+                variant: "destructive",
+            })
         }
     }
 
-    const updateNote = (id: number, updatedNote: Partial<Note>) => {
-        setNotes(notes.map(note => note.id === id ? {...note, ...updatedNote} : note))
-        toast({
-            title: "Note updated",
-            description: "Your note has been successfully updated.",
-        })
+    const handleUpdateNote = async (id: string, formData: FormData) => {
+        const result = await updateNote(id, formData)
+        if (result.success) {
+            await fetchNotes()
+            toast({
+                title: "Note updated",
+                description: "Your note has been successfully updated.",
+            })
+        } else {
+            toast({
+                title: "Error",
+                description: result.error,
+                variant: "destructive",
+            })
+        }
     }
 
-    const deleteNote = (id: number) => {
-        setNotes(notes.filter(note => note.id !== id))
-        toast({
-            title: "Note deleted",
-            description: "Your note has been successfully deleted.",
-        })
+    const handleDeleteNote = async (id: string) => {
+        const result = await deleteNote(id)
+        if (result.success) {
+            await fetchNotes()
+            toast({
+                title: "Note deleted",
+                description: "Your note has been successfully deleted.",
+            })
+        } else {
+            toast({
+                title: "Error",
+                description: result.error,
+                variant: "destructive",
+            })
+        }
     }
 
     const addCategory = () => {
@@ -64,7 +128,7 @@ export default function Dashboard() {
     }
 
     const filteredNotes = selectedCategory
-        ? notes.filter(note => note.category === selectedCategory)
+        ? notes.filter(note => note.category.name === selectedCategory)
         : notes
 
     return (
@@ -78,15 +142,50 @@ export default function Dashboard() {
                         </Button>
                     </DialogTrigger>
                     <DialogContent>
-                        <NoteModalForm
-                            newNote={newNote}
-                            setNewNote={setNewNote}
-                            categories={categories}
-                            newCategory={newCategory}
-                            setNewCategory={setNewCategory}
-                            addCategory={addCategory}
-                            addNote={addNote}
-                        />
+                        <DialogHeader>
+                            <DialogTitle>Create a new note</DialogTitle>
+                        </DialogHeader>
+                        <form action={addNote}>
+                            <div className="grid gap-4 py-4">
+                                <Input
+                                    name="title"
+                                    placeholder="Note title"
+                                    value={newNote.title}
+                                    onChange={(e) => setNewNote({...newNote, title: e.target.value})}
+                                />
+                                <Textarea
+                                    name="content"
+                                    placeholder="Note content"
+                                    value={newNote.content}
+                                    onChange={(e) => setNewNote({...newNote, content: e.target.value})}
+                                />
+                                <Select
+                                    name="category"
+                                    value={newNote.category}
+                                    onValueChange={(value) => setNewNote({...newNote, category: value})}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a category"/>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {categories.map((category) => (
+                                            <SelectItem key={category} value={category}>
+                                                {category}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <div className="flex gap-2">
+                                    <Input
+                                        placeholder="New category"
+                                        value={newCategory}
+                                        onChange={(e) => setNewCategory(e.target.value)}
+                                    />
+                                    <Button onClick={addCategory} type="button">Add Category</Button>
+                                </div>
+                            </div>
+                            <Button type="submit">Create Note</Button>
+                        </form>
                     </DialogContent>
                 </Dialog>
                 <CategoryFilter
@@ -100,8 +199,8 @@ export default function Dashboard() {
                     <NoteCard
                         key={note.id}
                         note={note}
-                        onUpdate={updateNote}
-                        onDelete={deleteNote}
+                        onUpdate={handleUpdateNote}
+                        onDelete={handleDeleteNote}
                         categories={categories}
                     />
                 ))}

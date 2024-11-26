@@ -8,16 +8,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 
 interface Note {
-    id: number
+    id: string
     title: string
     content: string
-    category: string
+    category: {
+        name: string
+    }
 }
 
 interface NoteCardProps {
     note: Note
-    onUpdate: (id: number, updatedNote: Partial<Note>) => void
-    onDelete: (id: number) => void
+    onUpdate: (id: string, formData: FormData) => void
+    onDelete: (id: string) => void
     categories: string[]
 }
 
@@ -25,13 +27,15 @@ export default function NoteCard({ note, onUpdate, onDelete, categories }: NoteC
     const [editedNote, setEditedNote] = useState(note)
     const [newCategory, setNewCategory] = useState('')
 
-    const handleUpdate = () => {
-        onUpdate(note.id, editedNote)
+    const handleUpdate = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+        const formData = new FormData(event.currentTarget)
+        onUpdate(note.id, formData)
     }
 
     const addCategory = () => {
         if (newCategory && !categories.includes(newCategory)) {
-            onUpdate(note.id, { ...editedNote, category: newCategory })
+            setEditedNote({ ...editedNote, category: { name: newCategory } })
             setNewCategory('')
         }
     }
@@ -41,7 +45,7 @@ export default function NoteCard({ note, onUpdate, onDelete, categories }: NoteC
             <CardHeader>
                 <CardTitle className="flex justify-between items-center">
                     {note.title}
-                    <Badge>{note.category}</Badge>
+                    <Badge>{note.category.name}</Badge>
                 </CardTitle>
             </CardHeader>
             <CardContent>
@@ -56,42 +60,47 @@ export default function NoteCard({ note, onUpdate, onDelete, categories }: NoteC
                         <DialogHeader>
                             <DialogTitle>Edit note</DialogTitle>
                         </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <Input
-                                placeholder="Note title"
-                                value={editedNote.title}
-                                onChange={(e) => setEditedNote({ ...editedNote, title: e.target.value })}
-                            />
-                            <Textarea
-                                placeholder="Note content"
-                                value={editedNote.content}
-                                onChange={(e) => setEditedNote({ ...editedNote, content: e.target.value })}
-                            />
-                            <Select
-                                value={editedNote.category}
-                                onValueChange={(value) => setEditedNote({ ...editedNote, category: value })}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a category" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {categories.map((category) => (
-                                        <SelectItem key={category} value={category}>
-                                            {category}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <div className="flex gap-2">
+                        <form onSubmit={handleUpdate}>
+                            <div className="grid gap-4 py-4">
                                 <Input
-                                    placeholder="New category"
-                                    value={newCategory}
-                                    onChange={(e) => setNewCategory(e.target.value)}
+                                    name="title"
+                                    placeholder="Note title"
+                                    value={editedNote.title}
+                                    onChange={(e) => setEditedNote({ ...editedNote, title: e.target.value })}
                                 />
-                                <Button onClick={addCategory} type="button">Add Category</Button>
+                                <Textarea
+                                    name="content"
+                                    placeholder="Note content"
+                                    value={editedNote.content}
+                                    onChange={(e) => setEditedNote({ ...editedNote, content: e.target.value })}
+                                />
+                                <Select
+                                    name="category"
+                                    value={editedNote.category.name}
+                                    onValueChange={(value) => setEditedNote({ ...editedNote, category: { name: value } })}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {categories.map((category) => (
+                                            <SelectItem key={category} value={category}>
+                                                {category}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <div className="flex gap-2">
+                                    <Input
+                                        placeholder="New category"
+                                        value={newCategory}
+                                        onChange={(e) => setNewCategory(e.target.value)}
+                                    />
+                                    <Button onClick={addCategory} type="button">Add Category</Button>
+                                </div>
                             </div>
-                        </div>
-                        <Button onClick={handleUpdate}>Update Note</Button>
+                            <Button type="submit">Update Note</Button>
+                        </form>
                     </DialogContent>
                 </Dialog>
                 <Button variant="destructive" onClick={() => onDelete(note.id)}>Delete</Button>

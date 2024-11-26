@@ -1,4 +1,4 @@
-import {Button} from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 
 interface CategoryFilterProps {
     categories: string[]
@@ -6,7 +6,7 @@ interface CategoryFilterProps {
     onSelectCategory: (category: string | null) => void
 }
 
-export default function CategoryFilter({categories, selectedCategory, onSelectCategory}: CategoryFilterProps) {
+export default function CategoryFilter({ categories, selectedCategory, onSelectCategory }: CategoryFilterProps) {
     return (
         <div className="flex gap-2">
             <Button
