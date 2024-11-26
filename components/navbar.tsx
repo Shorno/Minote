@@ -14,10 +14,6 @@ export default function Navbar() {
                 <Notebook className="h-6 w-6"/>
                 <span className="text-xl font-semibold">Minote</span>
             </Link>
-            <div className="hidden md:flex space-x-4">
-                <Link href={"/dashboard"} className="hover:text-gray-600">Dashboard</Link>
-            </div>
-
             {
                 !isLoaded ? (
                     <Avatar className="h-8 w-8">
