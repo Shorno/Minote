@@ -12,6 +12,7 @@ export async function createNote(formData: FormData) {
         throw new Error('User not authenticated')
     }
 
+
     const title = formData.get('title') as string
     const content = formData.get('content') as string
     const category = formData.get('category') as string
@@ -19,6 +20,7 @@ export async function createNote(formData: FormData) {
     if (!title || !content || !category) {
         throw new Error('Missing required fields')
     }
+
 
     try {
         const categoryRecord = await prisma.category.upsert({

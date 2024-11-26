@@ -41,8 +41,8 @@ export default function Dashboard() {
     const fetchNotes = async () => {
         const result = await getNotes()
         if (result.success) {
-            setNotes(result.notes)
-            const uniqueCategories = [...new Set(result.notes.map(note => note.category.name))]
+            setNotes(result.notes ?? [])
+            const uniqueCategories = [...new Set((result.notes ?? []).map(note => note.category.name))]
             setCategories(uniqueCategories)
         } else {
             toast({
