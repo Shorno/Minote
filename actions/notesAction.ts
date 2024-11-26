@@ -5,13 +5,11 @@ import prisma from "@/prisma/db";
 import {auth} from '@clerk/nextjs/server'
 
 
-export async function createNote(formData: FormData) {
+async function getNoteData(formData: FormData) {
     const {userId} = await auth()
-
     if (!userId) {
         throw new Error('User not authenticated')
     }
-
 
     const title = formData.get('title') as string
     const content = formData.get('content') as string
@@ -21,6 +19,12 @@ export async function createNote(formData: FormData) {
         throw new Error('Missing required fields')
     }
 
+    return {userId, title, content, category}
+}
+
+
+export async function createNote(formData: FormData) {
+    const {userId, title, content, category} = await getNoteData(formData)
 
     try {
         const categoryRecord = await prisma.category.upsert({
@@ -68,20 +72,7 @@ export async function getNotes() {
 }
 
 export async function updateNote(noteId: string, formData: FormData) {
-    const {userId} = await auth()
-
-    if (!userId) {
-        throw new Error('User not authenticated')
-    }
-
-    const title = formData.get('title') as string
-    const content = formData.get('content') as string
-    const category = formData.get('category') as string
-
-    if (!title || !content || !category) {
-        throw new Error('Missing required fields')
-    }
-
+    const {userId, title, content, category} = await getNoteData(formData)
     try {
         const categoryRecord = await prisma.category.upsert({
             where: {name: category},
@@ -107,6 +98,7 @@ export async function updateNote(noteId: string, formData: FormData) {
 }
 
 export async function deleteNote(noteId: string) {
+
     const {userId} = await auth()
 
     if (!userId) {
