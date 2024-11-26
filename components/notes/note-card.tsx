@@ -6,6 +6,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { useToast } from "@/hooks/use-toast"
+import { addCategory } from "@/actions/notesAction"
 
 interface Note {
     id: string
@@ -21,11 +23,19 @@ interface NoteCardProps {
     onUpdate: (id: string, formData: FormData) => void
     onDelete: (id: string) => void
     categories: string[]
+    onCategoryAdd: (category: string) => void
 }
 
-export default function NoteCard({ note, onUpdate, onDelete, categories }: NoteCardProps) {
+export default function NoteCard({
+                                     note,
+                                     onUpdate,
+                                     onDelete,
+                                     categories,
+                                     onCategoryAdd
+                                 }: NoteCardProps) {
     const [editedNote, setEditedNote] = useState(note)
     const [newCategory, setNewCategory] = useState('')
+    const { toast } = useToast()
 
     const handleUpdate = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
@@ -33,10 +43,28 @@ export default function NoteCard({ note, onUpdate, onDelete, categories }: NoteC
         onUpdate(note.id, formData)
     }
 
-    const addCategory = () => {
+    const handleAddCategory = async () => {
         if (newCategory && !categories.includes(newCategory)) {
-            setEditedNote({ ...editedNote, category: { name: newCategory } })
-            setNewCategory('')
+            const result = await addCategory(newCategory)
+
+            if (result.success) {
+                onCategoryAdd(newCategory)
+                setEditedNote(prev => ({
+                    ...prev,
+                    category: { name: newCategory }
+                }))
+                setNewCategory('')
+                toast({
+                    title: "Category added",
+                    description: `New category "${newCategory}" has been added.`,
+                })
+            } else {
+                toast({
+                    title: "Error",
+                    description: result.error,
+                    variant: "destructive",
+                })
+            }
         }
     }
 
@@ -96,7 +124,7 @@ export default function NoteCard({ note, onUpdate, onDelete, categories }: NoteC
                                         value={newCategory}
                                         onChange={(e) => setNewCategory(e.target.value)}
                                     />
-                                    <Button onClick={addCategory} type="button">Add Category</Button>
+                                    <Button onClick={handleAddCategory} type="button">Add Category</Button>
                                 </div>
                             </div>
                             <Button type="submit">Update Note</Button>
@@ -108,4 +136,3 @@ export default function NoteCard({ note, onUpdate, onDelete, categories }: NoteC
         </Card>
     )
 }
-

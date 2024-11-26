@@ -22,6 +22,35 @@ async function getNoteData(formData: FormData) {
     return {userId, title, content, category}
 }
 
+export async function addCategory(categoryName: string) {
+    const {userId} = await auth()
+
+    if (!userId) {
+        throw new Error('User not authenticated')
+    }
+
+    try {
+        const existingCategory = await prisma.category.findUnique({
+            where: { name: categoryName }
+        })
+
+        if (existingCategory) {
+            return { success: true, category: existingCategory }
+        }
+
+        const category = await prisma.category.create({
+            data: { name: categoryName }
+        })
+
+        revalidatePath('/')
+        return {success: true, category}
+    } catch (error) {
+        console.error('Failed to add category:', error)
+        return {success: false, error: 'Failed to add category'}
+    }
+}
+
+
 
 export async function createNote(formData: FormData) {
     const {userId, title, content, category} = await getNoteData(formData)

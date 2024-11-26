@@ -9,7 +9,7 @@ import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger} from "@
 import {Textarea} from "@/components/ui/textarea"
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select"
 import {useToast} from "@/hooks/use-toast";
-import {createNote, deleteNote, getNotes, updateNote} from "@/actions/notesAction";
+import {addCategory, createNote, deleteNote, getNotes, updateNote} from "@/actions/notesAction";
 import CategoryFilter from "@/components/notes/category-filter";
 import NoteCard from "@/components/notes/note-card";
 
@@ -31,7 +31,6 @@ export default function Dashboard() {
     const [newCategory, setNewCategory] = useState('')
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
     const {toast} = useToast()
-    //fix env
 
     useEffect(() => {
         if (user) {
@@ -116,17 +115,28 @@ export default function Dashboard() {
         }
     }
 
-    const addCategory = () => {
+    const handleAddCategory = async () => {
         if (newCategory && !categories.includes(newCategory)) {
-            setCategories([...categories, newCategory])
-            setNewNote({...newNote, category: newCategory})
-            setNewCategory('')
-            toast({
-                title: "Category added",
-                description: `New category "${newCategory}" has been added.`,
-            })
+            const result = await addCategory(newCategory)
+
+            if (result.success) {
+                setCategories([...categories, newCategory])
+                setNewNote({...newNote, category: newCategory})
+                setNewCategory('')
+                toast({
+                    title: "Category added",
+                    description: `New category "${newCategory}" has been added.`,
+                })
+            } else {
+                toast({
+                    title: "Error",
+                    description: result.error,
+                    variant: "destructive",
+                })
+            }
         }
     }
+
 
     const filteredNotes = selectedCategory
         ? notes.filter(note => note.category.name === selectedCategory)
@@ -182,7 +192,7 @@ export default function Dashboard() {
                                         value={newCategory}
                                         onChange={(e) => setNewCategory(e.target.value)}
                                     />
-                                    <Button onClick={addCategory} type="button">Add Category</Button>
+                                    <Button onClick={handleAddCategory} type="button">Add Category</Button>
                                 </div>
                             </div>
                             <Button type="submit">Create Note</Button>
@@ -203,6 +213,9 @@ export default function Dashboard() {
                         onUpdate={handleUpdateNote}
                         onDelete={handleDeleteNote}
                         categories={categories}
+                        onCategoryAdd={(newCategory) => {
+                            setCategories(prev => [...prev, newCategory])
+                        }}
                     />
                 ))}
             </div>
