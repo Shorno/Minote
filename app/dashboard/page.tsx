@@ -30,6 +30,8 @@ export default function Dashboard() {
     const [categories, setCategories] = useState<string[]>([])
     const [newCategory, setNewCategory] = useState('')
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
+
     const {toast} = useToast()
 
     useEffect(() => {
@@ -39,6 +41,7 @@ export default function Dashboard() {
     }, [user])
 
     const fetchNotes = async () => {
+        setIsLoading(true)
         const result = await getNotes()
         if (result.success) {
             setNotes(result.notes ?? [])
@@ -51,7 +54,9 @@ export default function Dashboard() {
                 variant: "destructive",
             })
         }
+        setIsLoading(false)
     }
+
 
     const addNote = async (formData: FormData) => {
         if (!user) {
@@ -205,20 +210,32 @@ export default function Dashboard() {
                     onSelectCategory={setSelectedCategory}
                 />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredNotes.map(note => (
-                    <NoteCard
-                        key={note.id}
-                        note={note}
-                        onUpdate={handleUpdateNote}
-                        onDelete={handleDeleteNote}
-                        categories={categories}
-                        onCategoryAdd={(newCategory) => {
-                            setCategories(prev => [...prev, newCategory])
-                        }}
-                    />
-                ))}
-            </div>
+
+            {isLoading ? (
+                <div className="flex justify-center items-center h-64">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                </div>
+            ) : filteredNotes.length === 0 ? (
+                <div className="text-center py-10">
+                    <p className="text-xl text-muted-foreground">There are no notes yet. Start taking your notes now!</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredNotes.map(note => (
+                        <NoteCard
+                            key={note.id}
+                            note={note}
+                            onUpdate={handleUpdateNote}
+                            onDelete={handleDeleteNote}
+                            categories={categories}
+                            onCategoryAdd={(newCategory) => {
+                                setCategories(prev => [...prev, newCategory])
+                            }}
+                        />
+                    ))}
+                </div>
+            )}
+
         </div>
     )
 }
